@@ -83,10 +83,10 @@ const BackToTop: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 p-4 text-stone-800 hover:text-stone-500 transition-colors focus:outline-none mix-blend-darken"
+          className="fixed bottom-8 right-8 z-50 p-4 text-stone-800 bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:text-stone-500 transition-all focus:outline-none"
           aria-label="Back to top"
         >
-          <ArrowUp size={64} strokeWidth={1} />
+          <ArrowUp size={32} strokeWidth={1.5} />
         </motion.button>
       )}
     </AnimatePresence>
@@ -105,16 +105,15 @@ interface ProjectItemProps {
 }
 
 const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onClick, id }) => {
-  const isEven = index % 2 === 0;
   const detailsRef = useRef<HTMLDivElement>(null);
   
   // Animation for text revealing
   const textVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.8, delay: 0.2 }
+      transition: { duration: 0.8, delay: 0.2, ease: "easeOut" }
     }
   };
 
@@ -122,7 +121,6 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
   useEffect(() => {
     if (isActive && detailsRef.current) {
       // Immediate scroll with minimal delay to ensure ref is mounted
-      // significantly reduced from previous 400ms to 10ms for immediate feel
       const timer = setTimeout(() => {
         if (detailsRef.current) {
           // Calculate position: absolute top of the drawer + window scroll - header offset
@@ -136,100 +134,66 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
 
   return (
     // Outer Container
-    // IMPORTANT: Removed 'overflow-hidden' from here so the 'absolute' drawer can be seen outside this box.
-    // Added 'flex-col md:flex-row' for split layout.
-    // Added onClick handler to the container to support "click anywhere"
+    // Full screen height, relative positioning.
+    // Removed overflow-hidden so the drawer can appear below.
     <div 
       id={id}
       onClick={onClick}
-      className={`relative w-full min-h-screen flex flex-col md:flex-row border-b border-stone-300/50 bg-[#f5f4f0] transition-all duration-300 cursor-pointer ${isActive ? 'z-40' : 'z-0'}`}
+      className={`relative w-full h-screen bg-stone-900 cursor-pointer group ${isActive ? 'z-40' : 'z-0'}`}
     >
       
       {/* 
-        IMAGE SIDE (50%)
-        Full bleed, no padding. Touches the edges of the block.
+        Background Image Container
+        This container clips the image zoom effect so it doesn't spill out.
       */}
-      <div className={`relative w-full md:w-1/2 h-[50vh] md:h-auto ${isEven ? 'md:order-1' : 'md:order-2'}`}>
+      <div className="absolute inset-0 overflow-hidden">
         <img 
           src={project.imageUrl} 
           alt={project.title}
-          className="w-full h-full object-cover block"
+          className="w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
         />
+        {/* Gradient Overlay for Text Readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
 
       {/* 
-        TEXT / INFO SIDE (50%)
-        Contains the blurred background and the text content.
-        Needs 'overflow-hidden' to clip the blurred background, but NOT clip the drawer (which is outside this div).
+        Floating Text Content 
+        Positioned at the bottom, layered over the image.
       */}
-      <div 
-        className={`relative w-full md:w-1/2 flex items-center justify-center p-8 md:p-20 overflow-hidden ${isEven ? 'md:order-2' : 'md:order-1'}`}
-      >
-        {/* --- Immersive Blurred Background (Specific to Text Area) --- */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 w-full h-full scale-110">
-             <img 
-               src={project.imageUrl} 
-               alt="" 
-               className="w-full h-full object-cover blur-[60px] opacity-40 grayscale-[0.3]"
-             />
-          </div>
-          {/* Tint Overlay */}
-          <div 
-            className="absolute inset-0 opacity-60 mix-blend-multiply"
-            style={{ backgroundColor: project.color || '#e7e5e4' }}
-          />
-           {/* Noise texture */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-        </div>
-
-        {/* Text Content */}
+      <div className="absolute bottom-0 left-0 w-full p-8 md:p-16 pb-20 md:pb-24 z-20 flex flex-col justify-end items-center md:items-start text-center md:text-left pointer-events-none">
         <motion.div 
           variants={textVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: false, amount: 0.4 }}
-          className="relative z-10 w-full max-w-lg"
+          viewport={{ once: false, amount: 0.3 }}
+          className="max-w-4xl w-full"
         >
-          <div className="mb-8">
-             <span className="inline-block px-3 py-1 border border-stone-800/30 rounded-full text-[10px] md:text-xs font-medium tracking-widest text-stone-800 uppercase bg-white/30 backdrop-blur-sm mb-4">
-              {project.category}
-            </span>
-            <span className="block text-xs font-serif italic text-stone-600">
-              {project.year}
-            </span>
-          </div>
+          {/* Category Label */}
+          <p className="text-white/80 font-medium tracking-[0.2em] text-xs md:text-sm uppercase mb-4 md:mb-6 shadow-black drop-shadow-sm">
+            {project.category}
+          </p>
           
-          <h3 className="text-4xl md:text-6xl font-serif text-stone-900 mb-8 leading-[0.9] -ml-1">
+          {/* Title */}
+          <h3 className="text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight text-white mb-6 md:mb-8 drop-shadow-md">
             {project.title}
           </h3>
           
-          <p className="text-stone-800 font-light text-base md:text-lg leading-relaxed mb-10 mix-blend-hard-light">
+          {/* Short Description */}
+          <p className="text-lg md:text-2xl text-stone-200 font-normal leading-relaxed max-w-2xl mb-10 md:mb-12 drop-shadow-sm">
             {project.shortDescription}
           </p>
           
-          {/* 
-            Visual button only. 
-            The click is handled by the parent container, but we keep this for visual affordance.
-            Added pointer-events-none to prevent double firing if clicked directly, 
-            or we just rely on bubbling. Bubbling is fine.
-          */}
-          <div 
-            className="flex items-center gap-3 text-stone-800 transition-colors group"
-          >
-            <span className="text-xs tracking-[0.2em] uppercase border-b border-stone-800 pb-1 group-hover:border-stone-600">
-              {isActive ? 'Close Details' : 'View Project'}
-            </span>
-            <span className={`transform transition-transform duration-500 ${isActive ? 'rotate-180' : 'rotate-0'}`}>
-               {isActive ? <X size={16} /> : <ArrowDown size={16} />}
-            </span>
+          {/* Call to Action Button */}
+          {/* pointer-events-auto allows the hover state on the button itself, though clicking anywhere works */}
+          <div className="pointer-events-auto inline-flex items-center gap-3 px-8 py-4 bg-white text-stone-900 rounded-full font-semibold text-sm md:text-base tracking-wide hover:bg-stone-200 transition-colors shadow-lg">
+             <span>{isActive ? 'Close' : 'View Project'}</span>
+             <ChevronDown size={18} className={`transition-transform duration-300 ${isActive ? 'rotate-180' : ''}`} />
           </div>
         </motion.div>
       </div>
 
       {/* 
         The "Pull Down" Drawer Overlay 
-        Positioned 'absolute' relative to the main ProjectItem container.
       */}
       <AnimatePresence>
         {isActive && (
@@ -241,42 +205,42 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute top-[100%] left-0 w-full bg-[#fbfaf8] border-b border-stone-200 shadow-2xl overflow-hidden z-50 origin-top cursor-auto"
+            className="absolute top-full left-0 w-full bg-[#fbfaf8] border-t border-stone-200 shadow-2xl overflow-hidden z-50 origin-top cursor-auto"
           >
-            <div className="w-full max-w-6xl mx-auto px-4 md:px-8 py-16 flex flex-col md:flex-row gap-12 md:gap-24 relative z-10 pb-32">
-              {/* Paper texture for the drawer background */}
-               <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-               
+            <div className="w-full max-w-6xl mx-auto px-6 md:px-8 py-16 md:py-24 flex flex-col md:flex-row gap-12 md:gap-24 relative z-10">
+              
               <div className="md:w-2/3 relative">
-                <h4 className="text-xl font-serif mb-8 text-stone-800 border-b border-stone-200 pb-4 inline-block">
+                <h4 className="text-2xl font-serif mb-8 text-stone-800">
                   Project Insight
                 </h4>
-                <p className="text-stone-600 font-light leading-loose whitespace-pre-line text-lg">
+                <p className="text-stone-600 font-light leading-loose whitespace-pre-line text-lg md:text-xl">
                   {project.fullDescription}
                 </p>
                 
                 <div className="mt-12 flex flex-wrap gap-3">
                   {project.tags.map(tag => (
-                    <span key={tag} className="px-4 py-2 bg-stone-100 border border-stone-200 text-stone-600 text-xs tracking-wide">
+                    <span key={tag} className="px-4 py-2 bg-stone-100 border border-stone-200 text-stone-600 text-sm tracking-wide rounded-md">
                       {tag}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="md:w-1/3 flex flex-col gap-8 bg-white p-8 border border-stone-100 h-fit relative shadow-sm">
-                 <div>
-                    <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest">Role</span>
-                    <span className="text-stone-800 text-lg font-serif">Art Director, Designer</span>
+              <div className="md:w-1/3 flex flex-col gap-8 h-fit relative">
+                 <div className="p-8 bg-white border border-stone-100 rounded-xl shadow-sm">
+                    <div className="mb-6">
+                        <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest font-semibold">Role</span>
+                        <span className="text-stone-800 text-lg">Art Director, Designer</span>
+                    </div>
+                    <div className="mb-6">
+                        <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest font-semibold">Year</span>
+                        <span className="text-stone-800 text-lg">{project.year}</span>
+                    </div>
+                    <button className="flex items-center gap-2 text-stone-900 hover:text-stone-500 transition-colors group/link mt-2">
+                      <span className="text-sm font-semibold border-b border-stone-900 group-hover/link:border-stone-500 pb-0.5">View Case Study</span>
+                      <ExternalLink size={16} />
+                    </button>
                  </div>
-                 <div>
-                    <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest">Year</span>
-                    <span className="text-stone-800 text-lg font-serif">{project.year}</span>
-                 </div>
-                 <button className="flex items-center gap-2 text-stone-900 hover:text-stone-500 transition-colors group/link mt-4">
-                   <span className="text-sm font-medium border-b border-stone-900 group-hover/link:border-stone-500 pb-1">View Case Study</span>
-                   <ExternalLink size={16} />
-                 </button>
               </div>
 
               {/* Distinct Close Button in Bottom Right */}
@@ -285,7 +249,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
                   e.stopPropagation(); // Prevent bubbling
                   onClick(); // Trigger close
                 }}
-                className="absolute bottom-8 right-8 bg-stone-900 text-stone-50 hover:bg-stone-700 transition-colors px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl z-50 group"
+                className="absolute bottom-8 right-8 bg-stone-900 text-white hover:bg-stone-700 transition-colors px-6 py-3 rounded-full flex items-center gap-3 shadow-xl z-50 group"
               >
                 <span className="text-xs font-bold tracking-widest uppercase">Close</span>
                 <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
@@ -373,7 +337,7 @@ const App: React.FC = () => {
     <div className="min-h-screen selection:bg-stone-300 selection:text-stone-900 bg-[#f5f4f0] overflow-x-hidden">
       
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center bg-[#f5f4f0]/80 backdrop-blur-md transition-all duration-300 border-b border-transparent hover:border-stone-200">
+      <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center bg-[#f5f4f0]/90 backdrop-blur-md border-b border-stone-200/50 transition-all duration-300">
          <div className="cursor-pointer group" onClick={scrollToTop}>
             <span className="font-serif font-bold text-xl tracking-tighter text-stone-800 group-hover:text-stone-500 transition-colors">SK.</span>
          </div>
@@ -397,7 +361,7 @@ const App: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-6 w-64 bg-[#f0efe9]/80 backdrop-blur-md border border-stone-200 shadow-xl p-2 rounded-sm z-50"
+                    className="absolute top-full right-0 mt-6 w-64 bg-[#f0efe9]/95 backdrop-blur-md border border-stone-200 shadow-xl p-2 rounded-sm z-50"
                   >
                     <ul className="flex flex-col">
                       {PROJECTS.map((project) => (
@@ -426,7 +390,7 @@ const App: React.FC = () => {
          </div>
       </nav>
 
-      {/* Click outside listener */}
+      {/* Click outside listener for menu */}
       {isWorksMenuOpen && (
         <div 
           className="fixed inset-0 z-40 bg-transparent" 
