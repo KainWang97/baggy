@@ -82,10 +82,9 @@ const BackToTop: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          whileHover={{ scale: 1.2, y: -2 }}
+          whileHover={{ scale: 1.1, y: -2 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
           onClick={scrollToTop}
-          // Removed bg-white, shadow, rounded-full. Added p-6 for large click area.
           className="fixed bottom-6 right-6 z-50 p-6 text-stone-800/60 hover:text-stone-900 transition-colors focus:outline-none cursor-pointer"
           aria-label="Back to top"
         >
@@ -109,7 +108,30 @@ interface ProjectItemProps {
 
 const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onClick, id }) => {
   const detailsRef = useRef<HTMLDivElement>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
+  // Use gallery if available, otherwise fallback to single image
+  const galleryImages = project.gallery || [project.imageUrl];
+
+  // Slideshow Logic
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    
+    // Auto-play only if active and has multiple images
+    if (isActive && galleryImages.length > 1) {
+      interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
+      }, 3000); // Change slide every 3 seconds
+    } else {
+      // Reset to first image when closed
+      if (!isActive) {
+        setCurrentImageIndex(0);
+      }
+    }
+
+    return () => clearInterval(interval);
+  }, [isActive, galleryImages.length, currentImageIndex]); // Added currentImageIndex to dependency to reset timer on manual interaction
+
   // Animation for text revealing
   const textVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
@@ -117,13 +139,17 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
       opacity: 1, 
       y: 0,
       transition: { duration: 0.8, delay: 0.2, ease: "easeOut" }
+    },
+    exit: {
+      opacity: 0,
+      transition: { duration: 0.5, ease: "easeOut" }
     }
   };
 
   // Determine slide direction based on index (even = left, odd = right)
   const slideVariants: Variants = {
     hidden: { 
-      x: index % 2 === 0 ? -80 : 80, 
+      x: index % 2 === 0 ? -50 : 50, 
       opacity: 0 
     },
     visible: { 
@@ -174,23 +200,70 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
           initial="hidden"
           whileInView="visible"
           viewport={{ once: false, amount: 0.2 }}
-          className="w-full h-full"
+          className="w-full h-full relative"
         >
-          <img 
-            src={project.imageUrl} 
-            alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
-          />
+          {/* Slideshow Rendering */}
+          <AnimatePresence mode="popLayout">
+            <motion.img 
+              key={currentImageIndex}
+              src={galleryImages[currentImageIndex]} 
+              alt={project.title}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }} // Smooth crossfade
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
+            />
+          </AnimatePresence>
         </motion.div>
         {/* Gradient Overlay for Text Readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
 
       {/* 
+        Gallery Indicators (Dots)
+        Visible only when active and has multiple images
+        Updated: Larger clickable area and larger visual dots.
+      */}
+      {isActive && galleryImages.length > 1 && (
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 flex gap-1 items-center">
+          {galleryImages.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent toggling project details
+                setCurrentImageIndex(idx);
+              }}
+              // Increased touch area with p-3 (12px padding around)
+              className="p-3 group focus:outline-none"
+              aria-label={`Go to slide ${idx + 1}`}
+            >
+              {/* Inner Visual Dot */}
+              <div 
+                className={`h-2.5 rounded-full transition-all duration-300 ease-out shadow-sm ${
+                  idx === currentImageIndex 
+                    ? 'w-10 bg-white opacity-100' 
+                    : 'w-2.5 bg-white/50 group-hover:bg-white/80 group-hover:w-4'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 
         Floating Text Content 
         Positioned at the bottom, layered over the image.
+        HIDDEN when Active
       */}
-      <div className="absolute bottom-0 left-0 w-full p-8 md:p-16 pb-20 md:pb-24 z-20 flex flex-col justify-end items-center md:items-start text-center md:text-left pointer-events-none">
+      <motion.div 
+        animate={{ 
+          opacity: isActive ? 0 : 1,
+          display: isActive ? "none" : "flex"
+        }}
+        transition={{ duration: 0.5 }}
+        className="absolute bottom-0 left-0 w-full p-8 md:p-16 pb-20 md:pb-24 z-20 flex-col justify-end items-center md:items-start text-center md:text-left pointer-events-none"
+      >
         <motion.div 
           variants={textVariants}
           initial="hidden"
@@ -208,19 +281,18 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
             {project.title}
           </h3>
           
-          {/* Short Description - Resized to min 14px (text-sm) max 18px (text-lg) */}
+          {/* Short Description */}
           <p className="text-sm md:text-lg text-stone-200 font-normal leading-relaxed max-w-xl mb-8 md:mb-10 drop-shadow-sm opacity-95">
             {project.shortDescription}
           </p>
           
           {/* Call to Action Button */}
-          {/* Smaller size: px-6 py-3 */}
           <div className="pointer-events-auto inline-flex items-center gap-2 px-6 py-3 bg-gray text-stone-900 font-semibold text-xs md:text-sm tracking-wide hover:bg-white opacity-70 shadow-lg backdrop-blur-sm">
-             <span>{isActive ? 'Close' : 'View'}</span>
-             <ChevronDown size={16} className={`transition-transform duration-300 ${isActive ? 'rotate-180' : ''}`} />
+             <span>View</span>
+             <ChevronDown size={16} />
           </div>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* 
         The "Pull Down" Drawer Overlay 
@@ -233,7 +305,11 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
             onClick={(e) => e.stopPropagation()} 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            exit={{ 
+              height: 0, 
+              opacity: 0,
+              transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } 
+            }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="absolute top-full left-0 w-full bg-[#fbfaf8] border-t border-stone-200 shadow-2xl overflow-hidden z-50 origin-top cursor-auto"
           >
@@ -279,11 +355,9 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
                   e.stopPropagation(); // Prevent bubbling
                   onClick(); // Trigger close
                 }}
-                className="absolute bottom-8 right-8 bg-stone-900 text-white hover:bg-stone-500 transition-colors px-6 py-3 flex items-center gap-3 shadow-l z-50 group opacity-50
-
-"
+                className="absolute bottom-8 right-8 bg-stone-900 text-white hover:bg-stone-500 opacity-50"
               >
-                <span className="text-xs font-bold tracking-widest uppercase">Close</span>
+                <span className="text-xs font-bold tracking-widest uppercase"></span>
                 <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
               </button>
             </div>
@@ -393,7 +467,7 @@ const App: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-6 w-64 bg-[#f0efe9]/95 backdrop-blur-md border border-stone-200 shadow-xl p-2 rounded-sm z-50"
+                    className="absolute top-full right-0 mt-6 w-64 bg-[#f0efe9]/80 backdrop-blur-md border border-stone-200 shadow-xl p-2 rounded-sm z-50"
                   >
                     <ul className="flex flex-col">
                       {PROJECTS.map((project) => (

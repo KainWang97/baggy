@@ -8,4 +8,5 @@ export interface Project {
   imageUrl: string;
   tags: string[];
   color?: string;
+  gallery?: string[]; // New property for slideshow images
 }
