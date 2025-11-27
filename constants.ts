@@ -40,6 +40,36 @@ export const PROJECTS: Project[] = [
     year: '2023',
     imageUrl: 'https://picsum.photos/id/102/800/600',
     tags: ['App Design', 'IoT', 'Interaction']
+  },
+  {
+    id: '5',
+    title: 'Washi Paper Lab',
+    category: 'Craft',
+    shortDescription: 'Revitalizing traditional Japanese paper making through modern branding.',
+    fullDescription: 'We partnered with a historic paper mill in Gifu to create a digital archive and e-commerce platform. The challenge was to convey the texture and warmth of handmade paper through a screen. High-resolution macro photography combined with slow, organic animations creates a tactile digital experience.',
+    year: '2023',
+    imageUrl: 'https://picsum.photos/id/24/800/600',
+    tags: ['Branding', 'Photography', 'Culture']
+  },
+  {
+    id: '6',
+    title: 'Zen Garden VR',
+    category: 'Experiential',
+    shortDescription: 'Virtual reality meditation experience in a generated dry landscape.',
+    fullDescription: 'A VR application that procedurally generates karesansui (dry landscape) gardens. Users can rake gravel and place stones in a serene, physics-based environment. The sound design responds to the user\'s movements, creating a unique soundscape for each session.',
+    year: '2024',
+    imageUrl: 'https://picsum.photos/id/28/800/600',
+    tags: ['VR', 'Unity', 'Sound Design']
+  },
+  {
+    id: '7',
+    title: 'Sumi Ink',
+    category: 'Typography',
+    shortDescription: 'A variable typeface inspired by the fluid dynamics of calligraphy ink.',
+    fullDescription: 'Sumi Ink is a display typeface that changes weight and flow based on typing speed and context. Developed using custom algorithms to simulate the capillary action of ink on paper, it brings the unpredictability and beauty of hand-lettering to digital typography.',
+    year: '2022',
+    imageUrl: 'https://picsum.photos/id/42/800/600',
+    tags: ['Typography', 'Creative Coding', 'Design']
   }
 ];
 

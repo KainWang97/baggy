@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowDown, X, Globe, ExternalLink, Mail } from 'lucide-react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { ArrowDown, X, ExternalLink, ChevronDown } from 'lucide-react';
 import { PROJECTS, SOCIAL_LINKS } from './constants';
 import { Project } from './types';
 
@@ -12,7 +12,7 @@ import { Project } from './types';
  */
 const Hero: React.FC = () => {
   return (
-    <section className="min-h-[80vh] flex flex-col justify-center items-center px-6 relative overflow-hidden">
+    <section className="min-h-[85vh] flex flex-col justify-center items-center px-6 relative overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -58,22 +58,23 @@ interface ProjectItemProps {
   index: number;
   isActive: boolean;
   onClick: () => void;
+  id?: string;
 }
 
-const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onClick }) => {
+const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onClick, id }) => {
   const isEven = index % 2 === 0;
   
   // Animation Variants
-  const cardVariants = {
+  const cardVariants: Variants = {
     hidden: { 
       opacity: 0, 
-      x: isEven ? -60 : 60 // Slide from left if even, right if odd
+      x: isEven ? -80 : 80 // Slide from left if even, right if odd
     },
     visible: { 
       opacity: 1, 
       x: 0,
       transition: { 
-        duration: 0.9, 
+        duration: 1.0, 
         ease: [0.22, 1, 0.36, 1], // Cubic bezier for "heavy door" feel
       }
     }
@@ -81,18 +82,19 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
 
   return (
     <motion.div
+      id={id}
       variants={cardVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: "-10%" }} // Trigger when 10% in view
-      className="w-full max-w-5xl mx-auto mb-12 md:mb-24 px-4 md:px-8"
+      viewport={{ once: false, amount: 0.2 }} // Changed once:false to re-trigger animation
+      className="w-full max-w-5xl mx-auto mb-16 md:mb-32 px-4 md:px-8 scroll-mt-24" // scroll-mt for offset when scrolling
     >
       <div 
         onClick={onClick}
         className="group cursor-pointer relative"
       >
         {/* Main "Closed" Card Area */}
-        <div className="relative overflow-hidden bg-white/50 border border-stone-200 hover:border-stone-400 transition-colors duration-500 ease-out">
+        <div className="relative overflow-hidden bg-white/50 border border-stone-200 transition-colors duration-500 ease-out hover:border-stone-400">
           <div className="flex flex-col md:flex-row h-full">
             
             {/* Image Section - Slides slightly on hover (parallax-ish) */}
@@ -100,9 +102,9 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
                <motion.img 
                 src={project.imageUrl} 
                 alt={project.title}
-                className="w-full h-full object-cover filter grayscale opacity-90 transition-all duration-700 ease-out group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105"
+                className="w-full h-full object-cover filter grayscale opacity-90 transition-all duration-700 ease-out group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-[1.02]"
                />
-               <div className="absolute inset-0 bg-stone-900/10 group-hover:bg-transparent transition-colors duration-500" />
+               <div className="absolute inset-0 bg-stone-900/5 group-hover:bg-transparent transition-colors duration-500" />
             </div>
 
             {/* Text Preview Section */}
@@ -121,7 +123,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
               
               <div className="mt-8 flex items-center justify-between text-stone-400">
                 <span className="text-xs tracking-wider uppercase group-hover:text-stone-800 transition-colors">
-                  {isActive ? 'Close' : 'Read Details'}
+                  {isActive ? 'Close' : 'View Project'}
                 </span>
                 <span className={`transform transition-transform duration-500 ${isActive ? 'rotate-180' : 'rotate-0'}`}>
                    {isActive ? <X size={16} /> : <ArrowDown size={16} />}
@@ -185,7 +187,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
  */
 const Footer: React.FC = () => {
   return (
-    <footer className="py-24 px-6 bg-[#f0efe9] mt-24">
+    <footer id="contact" className="py-24 px-6 bg-[#f0efe9] mt-24">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center">
         <div className="mb-12 md:mb-0">
            <h2 className="text-3xl font-serif text-stone-800 mb-4">Let's Connect</h2>
@@ -222,32 +224,102 @@ const Footer: React.FC = () => {
  */
 const App: React.FC = () => {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const [isWorksMenuOpen, setIsWorksMenuOpen] = useState(false);
 
   const handleProjectClick = (id: string) => {
-    // If clicking the already open project, close it. Otherwise open the new one.
     setActiveProjectId(prev => prev === id ? null : id);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsWorksMenuOpen(false);
+  };
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsWorksMenuOpen(false);
+  };
+
+  const scrollToProject = (projectId: string) => {
+    const element = document.getElementById(`project-${projectId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsWorksMenuOpen(false);
   };
 
   return (
     <div className="min-h-screen selection:bg-stone-300 selection:text-stone-900">
       
-      {/* Navigation (Simple Logo) */}
-      <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center pointer-events-none">
-         <div className="pointer-events-auto">
-            <span className="font-serif font-bold text-xl tracking-tighter text-stone-800">SK.</span>
+      {/* Navigation - Fixed styling to prevent content occlusion */}
+      <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center bg-[#f5f4f0]/80 backdrop-blur-md transition-all duration-300">
+         <div className="cursor-pointer" onClick={scrollToTop}>
+            <span className="font-serif font-bold text-xl tracking-tighter text-stone-800 hover:text-stone-600 transition-colors">SK.</span>
          </div>
-         <div className="pointer-events-auto">
-            <a href="mailto:hello@example.com" className="p-3 bg-stone-800 text-stone-50 rounded-full hover:bg-stone-700 transition-colors shadow-none">
-              <Mail size={16} />
-            </a>
+         <div className="flex items-center gap-8 relative">
+            
+            {/* Works Dropdown Trigger */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsWorksMenuOpen(!isWorksMenuOpen)} 
+                className="flex items-center gap-1 text-stone-800 text-xs font-bold uppercase tracking-widest hover:text-stone-500 transition-colors focus:outline-none"
+              >
+                Works
+                <ChevronDown size={14} className={`transform transition-transform duration-300 ${isWorksMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Works Dropdown Menu */}
+              <AnimatePresence>
+                {isWorksMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full right-0 mt-4 w-56 bg-[#f0efe9]/80 backdrop-blur-md border border-stone-200 shadow-lg p-2 rounded-sm z-50"
+                  >
+                    <ul className="flex flex-col">
+                      {PROJECTS.map((project) => (
+                        <li key={project.id}>
+                          <button
+                            onClick={() => scrollToProject(project.id)}
+                            className="w-full text-left px-4 py-3 text-xs md:text-sm text-stone-600 hover:bg-stone-200/50 hover:text-stone-900 transition-colors font-medium truncate focus:outline-none"
+                          >
+                            {project.title}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <button 
+              onClick={() => scrollToSection('contact')} 
+              className="text-stone-800 text-xs font-bold uppercase tracking-widest hover:text-stone-500 transition-colors focus:outline-none"
+            >
+              Contact
+            </button>
          </div>
       </nav>
 
-      <main className="w-full">
+      {/* Click outside listener to close menu (simple overlay) */}
+      {isWorksMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-transparent" 
+          onClick={() => setIsWorksMenuOpen(false)} 
+        />
+      )}
+
+      <main className="w-full pt-24">
         <Hero />
         
-        <section className="py-12 md:py-24">
-           <div className="text-center mb-24">
+        <section id="works" className="py-12 md:py-24">
+           <div className="text-center mb-32">
              <span className="text-xs font-bold text-stone-400 uppercase tracking-[0.3em]">Selected Works</span>
            </div>
 
@@ -255,6 +327,7 @@ const App: React.FC = () => {
              {PROJECTS.map((project, index) => (
                <ProjectItem 
                  key={project.id}
+                 id={`project-${project.id}`} // Pass unique ID for scrolling
                  index={index}
                  project={project}
                  isActive={activeProjectId === project.id}
