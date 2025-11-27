@@ -120,6 +120,19 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
     }
   };
 
+  // Determine slide direction based on index (even = left, odd = right)
+  const slideVariants: Variants = {
+    hidden: { 
+      x: index % 2 === 0 ? -80 : 80, 
+      opacity: 0 
+    },
+    visible: { 
+      x: 0, 
+      opacity: 1,
+      transition: { duration: 1.0, ease: "easeOut" }
+    }
+  };
+
   // Auto-scroll logic when details expand
   useEffect(() => {
     if (isActive && detailsRef.current) {
@@ -138,10 +151,16 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
   return (
     // Outer Container
     // Full screen height, relative positioning.
-    // Removed overflow-hidden so the drawer can appear below.
-    <div 
+    // Converted to motion.div to handle onViewportLeave for auto-closing
+    <motion.div 
       id={id}
       onClick={onClick}
+      onViewportLeave={() => {
+        // If the project is active but scrolled out of view, close it
+        if (isActive) {
+          onClick();
+        }
+      }}
       className={`relative w-full h-screen bg-stone-900 cursor-pointer group ${isActive ? 'z-40' : 'z-0'}`}
     >
       
@@ -149,12 +168,20 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
         Background Image Container
         This container clips the image zoom effect so it doesn't spill out.
       */}
-      <div className="absolute inset-0 overflow-hidden">
-        <img 
-          src={project.imageUrl} 
-          alt={project.title}
-          className="w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
-        />
+      <div className="absolute inset-0 overflow-hidden bg-stone-900">
+        <motion.div
+          variants={slideVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.2 }}
+          className="w-full h-full"
+        >
+          <img 
+            src={project.imageUrl} 
+            alt={project.title}
+            className="w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
+          />
+        </motion.div>
         {/* Gradient Overlay for Text Readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
@@ -182,15 +209,15 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
           </h3>
           
           {/* Short Description - Resized to min 14px (text-sm) max 18px (text-lg) */}
-          <p className="text-s md:text-lg text-stone-200 font-normal leading-relaxed max-w-xl mb-8 md:mb-10 drop-shadow-sm opacity-95">
+          <p className="text-sm md:text-lg text-stone-200 font-normal leading-relaxed max-w-xl mb-8 md:mb-10 drop-shadow-sm opacity-95">
             {project.shortDescription}
           </p>
           
           {/* Call to Action Button */}
-          {/* pointer-events-auto allows the hover state on the button itself, though clicking anywhere works */}
-          <div className="pointer-events-auto inline-flex items-center gap-3 px-8 py-4 bg-gray text-stone-900  font-semibold text-sm md:text-base rounded-full tracking-wide hover:bg-stone-100 transition-colors shadow-lg">
-             <span>{isActive ? 'Close' : 'View Project'}</span>
-             <ChevronDown size={18} className={`transition-transform duration-300 ${isActive ? 'rotate-180' : ''}`} />
+          {/* Smaller size: px-6 py-3 */}
+          <div className="pointer-events-auto inline-flex items-center gap-2 px-6 py-3 bg-gray text-stone-900 font-semibold text-xs md:text-sm tracking-wide hover:bg-white opacity-70 shadow-lg backdrop-blur-sm">
+             <span>{isActive ? 'Close' : 'View'}</span>
+             <ChevronDown size={16} className={`transition-transform duration-300 ${isActive ? 'rotate-180' : ''}`} />
           </div>
         </motion.div>
       </div>
@@ -263,7 +290,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };
 
