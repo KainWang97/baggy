@@ -7,4 +7,5 @@ export interface Project {
   year: string;
   imageUrl: string;
   tags: string[];
+  color?: string;
 }

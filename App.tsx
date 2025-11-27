@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { ArrowDown, X, ExternalLink, ChevronDown, ArrowUp } from 'lucide-react';
 import { PROJECTS, SOCIAL_LINKS } from './constants';
@@ -107,88 +107,107 @@ interface ProjectItemProps {
 const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onClick, id }) => {
   const isEven = index % 2 === 0;
   
-  // Slide-in Animation for the content
-  const contentVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      x: isEven ? -50 : 50 
-    },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      transition: { 
-        duration: 0.8, 
-        ease: [0.22, 1, 0.36, 1],
-      }
-    }
-  };
-
-  // Text expansion animation (Brief)
+  // Animation for text revealing
   const textVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.6, delay: 0.2 }
+      transition: { duration: 0.8, delay: 0.2 }
     }
   };
 
   return (
-    // Outer container: Relative for positioning the overlay details.
-    // Dynamic z-index: Active item is 40 (high), inactive is 0 (low) to ensure overlay works.
+    // Outer Container
+    // IMPORTANT: Removed 'overflow-hidden' from here so the 'absolute' drawer can be seen outside this box.
+    // Added 'flex-col md:flex-row' for split layout.
     <div 
       id={id}
-      className={`relative w-full border-b border-stone-300 bg-[#f5f4f0] transition-all duration-300 ${isActive ? 'z-40' : 'z-0'}`}
+      className={`relative w-full min-h-screen flex flex-col md:flex-row border-b border-stone-300/50 bg-[#f5f4f0] transition-all duration-300 ${isActive ? 'z-40' : 'z-0'}`}
     >
+      
+      {/* 
+        IMAGE SIDE (50%)
+        Full bleed, no padding. Touches the edges of the block.
+      */}
+      <div className={`relative w-full md:w-1/2 h-[50vh] md:h-auto ${isEven ? 'md:order-1' : 'md:order-2'}`}>
+        <img 
+          src={project.imageUrl} 
+          alt={project.title}
+          className="w-full h-full object-cover block"
+        />
+      </div>
+
+      {/* 
+        TEXT / INFO SIDE (50%)
+        Contains the blurred background and the text content.
+        Needs 'overflow-hidden' to clip the blurred background, but NOT clip the drawer (which is outside this div).
+      */}
       <div 
-        onClick={onClick}
-        className="group cursor-pointer w-full max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20"
+        className={`relative w-full md:w-1/2 flex items-center justify-center p-8 md:p-20 overflow-hidden ${isEven ? 'md:order-2' : 'md:order-1'}`}
       >
-        <motion.div
-          variants={contentVariants}
+        {/* --- Immersive Blurred Background (Specific to Text Area) --- */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 w-full h-full scale-110">
+             <img 
+               src={project.imageUrl} 
+               alt="" 
+               className="w-full h-full object-cover blur-[60px] opacity-40 grayscale-[0.3]"
+             />
+          </div>
+          {/* Tint Overlay */}
+          <div 
+            className="absolute inset-0 opacity-60 mix-blend-multiply"
+            style={{ backgroundColor: project.color || '#e7e5e4' }}
+          />
+           {/* Noise texture */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+        </div>
+
+        {/* Text Content */}
+        <motion.div 
+          variants={textVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: false, amount: 0.3 }}
-          className="flex flex-col md:flex-row gap-8 md:gap-16 items-center"
+          viewport={{ once: false, amount: 0.4 }}
+          className="relative z-10 w-full max-w-lg"
         >
-            {/* Image Section */}
-            <div className={`w-full md:w-1/2 h-64 md:h-[400px] overflow-hidden relative bg-stone-200 ${isEven ? 'md:order-1' : 'md:order-2'}`}>
-               <motion.img 
-                src={project.imageUrl} 
-                alt={project.title}
-                className="w-full h-full object-cover filter grayscale opacity-90 transition-all duration-700 ease-out group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-[1.03]"
-               />
-            </div>
-
-            {/* Text Brief Section - Auto expands/fades in on scroll */}
-            <motion.div 
-              variants={textVariants}
-              className={`w-full md:w-1/2 flex flex-col justify-center ${isEven ? 'md:order-2' : 'md:order-1'}`}
-            >
-              <span className="text-xs font-medium tracking-widest text-stone-500 uppercase block mb-3">
-                {project.category} — {project.year}
-              </span>
-              <h3 className="text-3xl md:text-5xl font-serif text-stone-800 mb-6 group-hover:text-stone-600 transition-colors">
-                {project.title}
-              </h3>
-              <p className="text-stone-600 font-light text-base leading-relaxed max-w-md mb-8">
-                {project.shortDescription}
-              </p>
-              
-              <div className="flex items-center gap-2 text-stone-400 group-hover:text-stone-800 transition-colors">
-                <span className="text-xs tracking-wider uppercase">
-                  {isActive ? 'Close' : 'View Project'}
-                </span>
-                <span className={`transform transition-transform duration-500 ${isActive ? 'rotate-180' : 'rotate-0'}`}>
-                   {isActive ? <X size={18} /> : <ArrowDown size={18} />}
-                </span>
-              </div>
-            </motion.div>
+          <div className="mb-8">
+             <span className="inline-block px-3 py-1 border border-stone-800/30 rounded-full text-[10px] md:text-xs font-medium tracking-widest text-stone-800 uppercase bg-white/30 backdrop-blur-sm mb-4">
+              {project.category}
+            </span>
+            <span className="block text-xs font-serif italic text-stone-600">
+              {project.year}
+            </span>
+          </div>
+          
+          <h3 className="text-4xl md:text-6xl font-serif text-stone-900 mb-8 leading-[0.9] -ml-1">
+            {project.title}
+          </h3>
+          
+          <p className="text-stone-800 font-light text-base md:text-lg leading-relaxed mb-10 mix-blend-hard-light">
+            {project.shortDescription}
+          </p>
+          
+          <button 
+            onClick={onClick}
+            className="flex items-center gap-3 text-stone-800 hover:text-stone-600 transition-colors group focus:outline-none"
+          >
+            <span className="text-xs tracking-[0.2em] uppercase border-b border-stone-800 pb-1 group-hover:border-stone-600">
+              {isActive ? 'Close Details' : 'View Project'}
+            </span>
+            <span className={`transform transition-transform duration-500 ${isActive ? 'rotate-180' : 'rotate-0'}`}>
+               {isActive ? <X size={16} /> : <ArrowDown size={16} />}
+            </span>
+          </button>
         </motion.div>
       </div>
 
-      {/* The "Pull Down" Drawer Overlay */}
-      {/* Position absolute ensures it floats OVER the next project */}
+      {/* 
+        The "Pull Down" Drawer Overlay 
+        Positioned 'absolute' relative to the main ProjectItem container.
+        Since ProjectItem does NOT have overflow-hidden, this can extend outside bounds.
+      */}
       <AnimatePresence>
         {isActive && (
           <motion.div
@@ -198,8 +217,11 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="absolute top-[100%] left-0 w-full bg-[#fbfaf8] border-b border-stone-200 shadow-2xl overflow-hidden z-50 origin-top"
           >
-            <div className="w-full max-w-6xl mx-auto px-4 md:px-8 py-16 flex flex-col md:flex-row gap-12 md:gap-24">
-              <div className="md:w-2/3">
+            <div className="w-full max-w-6xl mx-auto px-4 md:px-8 py-16 flex flex-col md:flex-row gap-12 md:gap-24 relative z-10">
+              {/* Paper texture for the drawer background */}
+               <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+               
+              <div className="md:w-2/3 relative">
                 <h4 className="text-xl font-serif mb-8 text-stone-800 border-b border-stone-200 pb-4 inline-block">
                   Project Insight
                 </h4>
@@ -216,7 +238,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
                 </div>
               </div>
 
-              <div className="md:w-1/3 flex flex-col gap-8 bg-white p-8 border border-stone-100 h-fit">
+              <div className="md:w-1/3 flex flex-col gap-8 bg-white p-8 border border-stone-100 h-fit relative shadow-sm">
                  <div>
                     <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest">Role</span>
                     <span className="text-stone-800 text-lg font-serif">Art Director, Designer</span>
@@ -243,7 +265,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
  */
 const Footer: React.FC = () => {
   return (
-    <footer id="contact" className="py-24 px-6 bg-[#eae8e0] border-t border-stone-300">
+    <footer id="contact" className="py-24 px-6 bg-[#eae8e0] border-t border-stone-300 relative z-10">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center">
         <div className="mb-12 md:mb-0">
            <h2 className="text-4xl font-serif text-stone-800 mb-6">Let's Connect</h2>
@@ -303,7 +325,7 @@ const App: React.FC = () => {
     const element = document.getElementById(`project-${projectId}`);
     if (element) {
       // Offset for the fixed header
-      const y = element.getBoundingClientRect().top + window.scrollY - 100;
+      const y = element.getBoundingClientRect().top + window.scrollY - 80;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
     setIsWorksMenuOpen(false);
@@ -337,7 +359,7 @@ const App: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-6 w-64 bg-[#f0efe9]/90 backdrop-blur-md border border-stone-200 shadow-xl p-2 rounded-sm z-50"
+                    className="absolute top-full right-0 mt-6 w-64 bg-[#f0efe9]/80 backdrop-blur-md border border-stone-200 shadow-xl p-2 rounded-sm z-50"
                   >
                     <ul className="flex flex-col">
                       {PROJECTS.map((project) => (
