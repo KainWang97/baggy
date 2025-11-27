@@ -19,14 +19,14 @@ const Hero: React.FC = () => {
         className="text-center max-w-2xl z-10"
       >
         <h2 className="text-sm md:text-base tracking-[0.2em] text-stone-500 mb-6 uppercase">
-          Portfolio
+          Graphic Design / Brand Identity
         </h2>
         <h1 className="text-5xl md:text-8xl font-light text-stone-800 mb-8 leading-tight tracking-tight">
           Saito <br className="md:hidden" /> Kenji
         </h1>
         <p className="text-stone-600 text-lg md:text-xl font-light leading-relaxed mb-12">
-          Design is the art of subtraction. <br />
-          Crafting digital clarity in a noisy world.
+          Visual storytelling through typography and space. <br />
+          Creating timeless identities and functional signage systems.
         </p>
       </motion.div>
 
@@ -219,14 +219,14 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
               <div className="md:w-1/3 flex flex-col gap-8 bg-white p-8 border border-stone-100 h-fit">
                  <div>
                     <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest">Role</span>
-                    <span className="text-stone-800 text-lg font-serif">Lead Designer, Developer</span>
+                    <span className="text-stone-800 text-lg font-serif">Art Director, Designer</span>
                  </div>
                  <div>
                     <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest">Year</span>
                     <span className="text-stone-800 text-lg font-serif">{project.year}</span>
                  </div>
                  <button className="flex items-center gap-2 text-stone-900 hover:text-stone-500 transition-colors group/link mt-4">
-                   <span className="text-sm font-medium border-b border-stone-900 group-hover/link:border-stone-500 pb-1">Visit Live Site</span>
+                   <span className="text-sm font-medium border-b border-stone-900 group-hover/link:border-stone-500 pb-1">View Case Study</span>
                    <ExternalLink size={16} />
                  </button>
               </div>

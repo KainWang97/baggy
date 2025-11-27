@@ -3,79 +3,78 @@ import { Project } from './types';
 export const PROJECTS: Project[] = [
   {
     id: '1',
-    title: 'Silent Tea House',
-    category: 'Architecture',
-    shortDescription: 'A digital experience for a modern tea ceremony space in Kyoto.',
-    fullDescription: 'This project involved creating a web presence for a boutique tea house. The goal was to translate the silence and mindfulness of the physical space into the digital realm. We utilized heavy negative space, subtle typographic interactions, and ambient soundscapes to create an immersive, meditative browsing experience.',
+    title: 'Mori Art Center',
+    category: 'Brand Identity',
+    shortDescription: 'Visual identity system for a contemporary art museum in Tokyo.',
+    fullDescription: 'The Mori Art Center required a visual identity that could serve as a quiet, versatile frame for diverse artistic expressions. The logo creates a flexible window system, adapting to different aspect ratios across signage, tickets, and digital platforms. The typographic system utilizes a custom grotesque font that balances neutrality with distinct character.',
     year: '2023',
-    imageUrl: 'https://picsum.photos/id/112/800/600',
-    tags: ['UI/UX', 'React', 'Sound Design']
+    imageUrl: 'https://picsum.photos/id/19/800/600',
+    tags: ['Branding', 'Typography', 'Print']
   },
   {
     id: '2',
-    title: 'Mono Ceramics',
-    category: 'E-Commerce',
-    shortDescription: 'Minimalist storefront for handcrafted ceramic artworks.',
-    fullDescription: 'Mono Ceramics required a platform that stepped back and let the texture of the clay speak. The interface is strictly monochrome, using layout shifts to highlight the imperfections and uniqueness of each handmade piece. The checkout process is streamlined to maintain the Zen-like atmosphere throughout the purchase journey.',
+    title: 'Axis Wayfinding',
+    category: 'Signage Design',
+    shortDescription: 'Functional signage and navigation system for a tech campus.',
+    fullDescription: 'Designed for a 20-story office complex, the Axis system prioritizes clarity and directional flow. We utilized high-contrast monochrome aesthetics with brushed aluminum materials to integrate seamlessly with the modern architecture. The iconography was custom-drawn to ensure legibility at a distance while maintaining a sleek, cohesive look.',
     year: '2024',
-    imageUrl: 'https://picsum.photos/id/113/800/600',
-    tags: ['Shopify', 'Photography', 'Branding']
+    imageUrl: 'https://picsum.photos/id/48/800/600',
+    tags: ['Wayfinding', 'Iconography', 'Environmental']
   },
   {
     id: '3',
-    title: 'Essence Magazine',
-    category: 'Editorial',
-    shortDescription: 'Digital editorial layout focusing on slow living and sustainability.',
-    fullDescription: 'A layout exploration challenging the grid. Essence Magazine is an online publication dedicated to the philosophy of slow living. The reading experience mimics the feeling of unfolding a physical newspaper, with horizontal scrolling sections and large, impactful serif typography that breathes.',
-    year: '2022',
-    imageUrl: 'https://picsum.photos/id/20/800/600',
-    tags: ['Web Design', 'Editorial', 'Typography']
+    title: 'Kissaten',
+    category: 'Packaging',
+    shortDescription: 'Brand identity and packaging for a traditional Japanese coffee house.',
+    fullDescription: 'Kissaten creates a bridge between the precision of Japanese tea ceremonies and modern coffee culture. The packaging features textured washi paper labels with embossed details, emphasizing the tactile experience. The color palette is derived from roasted beans, matcha, and ceramics, creating a warm, inviting brand atmosphere.',
+    year: '2023',
+    imageUrl: 'https://picsum.photos/id/1060/800/600',
+    tags: ['Packaging', 'Art Direction', 'Materiality']
   },
   {
     id: '4',
-    title: 'Komorebi Lighting',
-    category: 'Product Design',
-    shortDescription: 'Smart lighting control interface inspired by sunlight through trees.',
-    fullDescription: 'Komorebi is a smart home app designed to control ambient lighting. Unlike tech-heavy dashboards, this interface uses natural gradients and soft transitions to adjust brightness and color temperature, mimicking the natural progression of daylight to sunset.',
-    year: '2023',
-    imageUrl: 'https://picsum.photos/id/102/800/600',
-    tags: ['App Design', 'IoT', 'Interaction']
+    title: 'Forma Magazine',
+    category: 'Editorial',
+    shortDescription: 'Layout and art direction for a quarterly architecture publication.',
+    fullDescription: 'Forma is an exploration of grid systems and whitespace. As the lead art director, I focused on creating a reading rhythm that mimics the experience of walking through a gallery. Large, dramatic serif headlines contrast with structured body text, allowing the architectural photography to breathe on the page.',
+    year: '2022',
+    imageUrl: 'https://picsum.photos/id/366/800/600',
+    tags: ['Editorial', 'Layout', 'Print Media']
   },
   {
     id: '5',
-    title: 'Washi Paper Lab',
-    category: 'Craft',
-    shortDescription: 'Revitalizing traditional Japanese paper making through modern branding.',
-    fullDescription: 'We partnered with a historic paper mill in Gifu to create a digital archive and e-commerce platform. The challenge was to convey the texture and warmth of handmade paper through a screen. High-resolution macro photography combined with slow, organic animations creates a tactile digital experience.',
-    year: '2023',
-    imageUrl: 'https://picsum.photos/id/24/800/600',
-    tags: ['Branding', 'Photography', 'Culture']
+    title: 'Neon Nights',
+    category: 'Event Branding',
+    shortDescription: 'Poster series and motion graphics for an electronic music festival.',
+    fullDescription: 'A dynamic identity built on the concept of "light in motion." The poster series utilizes data-moshing techniques and long-exposure light photography to visualize sound waves. The branding extends to stage design and digital signage, creating a pulsating, energetic visual environment for festival-goers.',
+    year: '2024',
+    imageUrl: 'https://picsum.photos/id/452/800/600',
+    tags: ['Poster Design', 'Motion', 'Visual Identity']
   },
   {
     id: '6',
-    title: 'Zen Garden VR',
-    category: 'Experiential',
-    shortDescription: 'Virtual reality meditation experience in a generated dry landscape.',
-    fullDescription: 'A VR application that procedurally generates karesansui (dry landscape) gardens. Users can rake gravel and place stones in a serene, physics-based environment. The sound design responds to the user\'s movements, creating a unique soundscape for each session.',
-    year: '2024',
-    imageUrl: 'https://picsum.photos/id/28/800/600',
-    tags: ['VR', 'Unity', 'Sound Design']
+    title: 'Studio O',
+    category: 'Corporate Identity',
+    shortDescription: 'Minimalist stationery and guidelines for an interior design firm.',
+    fullDescription: 'Studio O believes in the beauty of raw materials. Their stationery suite—business cards, letterheads, and envelopes—reflects this through heavy, uncoated stock and blind debossing. The visual language is strictly typographic, relying on the perfect balance of information hierarchy and negative space.',
+    year: '2023',
+    imageUrl: 'https://picsum.photos/id/364/800/600',
+    tags: ['Stationery', 'Branding', 'Print']
   },
   {
     id: '7',
-    title: 'Sumi Ink',
+    title: 'Kage Typeface',
     category: 'Typography',
-    shortDescription: 'A variable typeface inspired by the fluid dynamics of calligraphy ink.',
-    fullDescription: 'Sumi Ink is a display typeface that changes weight and flow based on typing speed and context. Developed using custom algorithms to simulate the capillary action of ink on paper, it brings the unpredictability and beauty of hand-lettering to digital typography.',
+    shortDescription: 'A custom display serif typeface inspired by shadow and light.',
+    fullDescription: 'Kage (Shadow) is a high-contrast serif typeface designed for fashion and luxury editorial use. The thin strokes are razor-sharp, while the thick strokes mimic the fluid curve of ink. The project included a full specimen book and a digital microsite showcasing the font\'s ligatures and alternative glyphs.',
     year: '2022',
-    imageUrl: 'https://picsum.photos/id/42/800/600',
-    tags: ['Typography', 'Creative Coding', 'Design']
+    imageUrl: 'https://picsum.photos/id/24/800/600',
+    tags: ['Type Design', 'Typography', 'Specimen']
   }
 ];
 
 export const SOCIAL_LINKS = [
-  { name: 'Twitter', url: '#' },
+  { name: 'Behance', url: '#' },
   { name: 'Instagram', url: '#' },
-  { name: 'LinkedIn', url: '#' },
   { name: 'Email', url: 'mailto:hello@example.com' },
 ];
