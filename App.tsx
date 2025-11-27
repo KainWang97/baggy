@@ -50,7 +50,7 @@ const Hero: React.FC = () => {
 
 /**
  * Back To Top Button
- * Large arrow in the bottom right
+ * Transparent minimalist arrow with hover effects
  */
 const BackToTop: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -79,14 +79,17 @@ const BackToTop: React.FC = () => {
     <AnimatePresence>
       {isVisible && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          whileHover={{ scale: 1.2, y: -2 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 p-4 text-stone-800 bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:text-stone-500 transition-all focus:outline-none"
+          // Removed bg-white, shadow, rounded-full. Added p-6 for large click area.
+          className="fixed bottom-6 right-6 z-50 p-6 text-stone-800/60 hover:text-stone-900 transition-colors focus:outline-none cursor-pointer"
           aria-label="Back to top"
         >
-          <ArrowUp size={32} strokeWidth={1.5} />
+          <ArrowUp size={36} strokeWidth={1.5} />
         </motion.button>
       )}
     </AnimatePresence>
@@ -174,18 +177,18 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
           </p>
           
           {/* Title */}
-          <h3 className="text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight text-white mb-6 md:mb-8 drop-shadow-md">
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight text-white mb-6 md:mb-8 drop-shadow-md">
             {project.title}
           </h3>
           
-          {/* Short Description */}
-          <p className="text-lg md:text-2xl text-stone-200 font-normal leading-relaxed max-w-2xl mb-10 md:mb-12 drop-shadow-sm">
+          {/* Short Description - Resized to min 14px (text-sm) max 18px (text-lg) */}
+          <p className="text-s md:text-lg text-stone-200 font-normal leading-relaxed max-w-xl mb-8 md:mb-10 drop-shadow-sm opacity-95">
             {project.shortDescription}
           </p>
           
           {/* Call to Action Button */}
           {/* pointer-events-auto allows the hover state on the button itself, though clicking anywhere works */}
-          <div className="pointer-events-auto inline-flex items-center gap-3 px-8 py-4 bg-white text-stone-900 rounded-full font-semibold text-sm md:text-base tracking-wide hover:bg-stone-200 transition-colors shadow-lg">
+          <div className="pointer-events-auto inline-flex items-center gap-3 px-8 py-4 bg-gray text-stone-900  font-semibold text-sm md:text-base rounded-full tracking-wide hover:bg-stone-100 transition-colors shadow-lg">
              <span>{isActive ? 'Close' : 'View Project'}</span>
              <ChevronDown size={18} className={`transition-transform duration-300 ${isActive ? 'rotate-180' : ''}`} />
           </div>
@@ -249,7 +252,9 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
                   e.stopPropagation(); // Prevent bubbling
                   onClick(); // Trigger close
                 }}
-                className="absolute bottom-8 right-8 bg-stone-900 text-white hover:bg-stone-700 transition-colors px-6 py-3 rounded-full flex items-center gap-3 shadow-xl z-50 group"
+                className="absolute bottom-8 right-8 bg-stone-900 text-white hover:bg-stone-500 transition-colors px-6 py-3 flex items-center gap-3 shadow-l z-50 group opacity-50
+
+"
               >
                 <span className="text-xs font-bold tracking-widest uppercase">Close</span>
                 <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
