@@ -106,6 +106,7 @@ interface ProjectItemProps {
 
 const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onClick, id }) => {
   const isEven = index % 2 === 0;
+  const detailsRef = useRef<HTMLDivElement>(null);
   
   // Animation for text revealing
   const textVariants: Variants = {
@@ -117,13 +118,31 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
     }
   };
 
+  // Auto-scroll logic when details expand
+  useEffect(() => {
+    if (isActive && detailsRef.current) {
+      // Immediate scroll with minimal delay to ensure ref is mounted
+      // significantly reduced from previous 400ms to 10ms for immediate feel
+      const timer = setTimeout(() => {
+        if (detailsRef.current) {
+          // Calculate position: absolute top of the drawer + window scroll - header offset
+          const y = detailsRef.current.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 10); 
+      return () => clearTimeout(timer);
+    }
+  }, [isActive]);
+
   return (
     // Outer Container
     // IMPORTANT: Removed 'overflow-hidden' from here so the 'absolute' drawer can be seen outside this box.
     // Added 'flex-col md:flex-row' for split layout.
+    // Added onClick handler to the container to support "click anywhere"
     <div 
       id={id}
-      className={`relative w-full min-h-screen flex flex-col md:flex-row border-b border-stone-300/50 bg-[#f5f4f0] transition-all duration-300 ${isActive ? 'z-40' : 'z-0'}`}
+      onClick={onClick}
+      className={`relative w-full min-h-screen flex flex-col md:flex-row border-b border-stone-300/50 bg-[#f5f4f0] transition-all duration-300 cursor-pointer ${isActive ? 'z-40' : 'z-0'}`}
     >
       
       {/* 
@@ -189,9 +208,14 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
             {project.shortDescription}
           </p>
           
-          <button 
-            onClick={onClick}
-            className="flex items-center gap-3 text-stone-800 hover:text-stone-600 transition-colors group focus:outline-none"
+          {/* 
+            Visual button only. 
+            The click is handled by the parent container, but we keep this for visual affordance.
+            Added pointer-events-none to prevent double firing if clicked directly, 
+            or we just rely on bubbling. Bubbling is fine.
+          */}
+          <div 
+            className="flex items-center gap-3 text-stone-800 transition-colors group"
           >
             <span className="text-xs tracking-[0.2em] uppercase border-b border-stone-800 pb-1 group-hover:border-stone-600">
               {isActive ? 'Close Details' : 'View Project'}
@@ -199,25 +223,27 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
             <span className={`transform transition-transform duration-500 ${isActive ? 'rotate-180' : 'rotate-0'}`}>
                {isActive ? <X size={16} /> : <ArrowDown size={16} />}
             </span>
-          </button>
+          </div>
         </motion.div>
       </div>
 
       {/* 
         The "Pull Down" Drawer Overlay 
         Positioned 'absolute' relative to the main ProjectItem container.
-        Since ProjectItem does NOT have overflow-hidden, this can extend outside bounds.
       */}
       <AnimatePresence>
         {isActive && (
           <motion.div
+            ref={detailsRef}
+            // Stop propagation here so clicking inside the details doesn't trigger the parent onClick (which would close it)
+            onClick={(e) => e.stopPropagation()} 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute top-[100%] left-0 w-full bg-[#fbfaf8] border-b border-stone-200 shadow-2xl overflow-hidden z-50 origin-top"
+            className="absolute top-[100%] left-0 w-full bg-[#fbfaf8] border-b border-stone-200 shadow-2xl overflow-hidden z-50 origin-top cursor-auto"
           >
-            <div className="w-full max-w-6xl mx-auto px-4 md:px-8 py-16 flex flex-col md:flex-row gap-12 md:gap-24 relative z-10">
+            <div className="w-full max-w-6xl mx-auto px-4 md:px-8 py-16 flex flex-col md:flex-row gap-12 md:gap-24 relative z-10 pb-32">
               {/* Paper texture for the drawer background */}
                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
                
@@ -252,6 +278,18 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onC
                    <ExternalLink size={16} />
                  </button>
               </div>
+
+              {/* Distinct Close Button in Bottom Right */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent bubbling
+                  onClick(); // Trigger close
+                }}
+                className="absolute bottom-8 right-8 bg-stone-900 text-stone-50 hover:bg-stone-700 transition-colors px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl z-50 group"
+              >
+                <span className="text-xs font-bold tracking-widest uppercase">Close</span>
+                <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+              </button>
             </div>
           </motion.div>
         )}
