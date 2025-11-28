@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { ArrowDown, X, ExternalLink, ChevronDown, ArrowUp } from 'lucide-react';
+import { ArrowDown, X, ExternalLink, ChevronDown, ArrowUp, ArrowLeft } from 'lucide-react';
 import { PROJECTS, SOCIAL_LINKS } from './constants';
 import { Project } from './types';
 
@@ -96,280 +96,8 @@ const BackToTop: React.FC = () => {
 };
 
 /**
- * Individual Project Item
- */
-interface ProjectItemProps {
-  project: Project;
-  index: number;
-  isActive: boolean;
-  onClick: () => void;
-  id?: string;
-}
-
-const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onClick, id }) => {
-  const detailsRef = useRef<HTMLDivElement>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
-  // Use gallery if available, otherwise fallback to single image
-  const galleryImages = project.gallery || [project.imageUrl];
-
-  // Slideshow Logic
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    
-    // Auto-play only if active and has multiple images
-    if (isActive && galleryImages.length > 1) {
-      interval = setInterval(() => {
-        setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
-      }, 3000); // Change slide every 3 seconds
-    } else {
-      // Reset to first image when closed
-      if (!isActive) {
-        setCurrentImageIndex(0);
-      }
-    }
-
-    return () => clearInterval(interval);
-  }, [isActive, galleryImages.length, currentImageIndex]); // Added currentImageIndex to dependency to reset timer on manual interaction
-
-  // Animation for text revealing
-  const textVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.8, delay: 0.2, ease: "easeOut" }
-    },
-    exit: {
-      opacity: 0,
-      transition: { duration: 0.5, ease: "easeOut" }
-    }
-  };
-
-  // Determine slide direction based on index (even = left, odd = right)
-  const slideVariants: Variants = {
-    hidden: { 
-      x: index % 2 === 0 ? -50 : 50, 
-      opacity: 0 
-    },
-    visible: { 
-      x: 0, 
-      opacity: 1,
-      transition: { duration: 1.0, ease: "easeOut" }
-    }
-  };
-
-  // Auto-scroll logic when details expand
-  useEffect(() => {
-    if (isActive && detailsRef.current) {
-      // Immediate scroll with minimal delay to ensure ref is mounted
-      const timer = setTimeout(() => {
-        if (detailsRef.current) {
-          // Calculate position: absolute top of the drawer + window scroll - header offset
-          const y = detailsRef.current.getBoundingClientRect().top + window.scrollY - 80;
-          window.scrollTo({ top: y, behavior: 'smooth' });
-        }
-      }, 10); 
-      return () => clearTimeout(timer);
-    }
-  }, [isActive]);
-
-  return (
-    // Outer Container
-    // Full screen height, relative positioning.
-    // Converted to motion.div to handle onViewportLeave for auto-closing
-    <motion.div 
-      id={id}
-      onClick={onClick}
-      onViewportLeave={() => {
-        // If the project is active but scrolled out of view, close it
-        if (isActive) {
-          onClick();
-        }
-      }}
-      className={`relative w-full h-screen bg-stone-900 cursor-pointer group ${isActive ? 'z-40' : 'z-0'}`}
-    >
-      
-      {/* 
-        Background Image Container
-        This container clips the image zoom effect so it doesn't spill out.
-      */}
-      <div className="absolute inset-0 overflow-hidden bg-stone-900">
-        <motion.div
-          variants={slideVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.2 }}
-          className="w-full h-full relative"
-        >
-          {/* Slideshow Rendering */}
-          <AnimatePresence mode="popLayout">
-            <motion.img 
-              key={currentImageIndex}
-              src={galleryImages[currentImageIndex]} 
-              alt={project.title}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1 }} // Smooth crossfade
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
-            />
-          </AnimatePresence>
-        </motion.div>
-        {/* Gradient Overlay for Text Readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100" />
-      </div>
-
-      {/* 
-        Gallery Indicators (Dots)
-        Visible only when active and has multiple images
-        Updated: Larger clickable area and larger visual dots.
-      */}
-      {isActive && galleryImages.length > 1 && (
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 flex gap-1 items-center">
-          {galleryImages.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent toggling project details
-                setCurrentImageIndex(idx);
-              }}
-              // Increased touch area with p-3 (12px padding around)
-              className="p-3 group focus:outline-none"
-              aria-label={`Go to slide ${idx + 1}`}
-            >
-              {/* Inner Visual Dot */}
-              <div 
-                className={`h-2.5 rounded-full transition-all duration-300 ease-out shadow-sm ${
-                  idx === currentImageIndex 
-                    ? 'w-10 bg-white opacity-100' 
-                    : 'w-2.5 bg-white/50 group-hover:bg-white/80 group-hover:w-4'
-                }`}
-              />
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* 
-        Floating Text Content 
-        Positioned at the bottom, layered over the image.
-        HIDDEN when Active
-      */}
-      <motion.div 
-        animate={{ 
-          opacity: isActive ? 0 : 1,
-          display: isActive ? "none" : "flex"
-        }}
-        transition={{ duration: 0.5 }}
-        className="absolute bottom-0 left-0 w-full p-8 md:p-16 pb-20 md:pb-24 z-20 flex-col justify-end items-center md:items-start text-center md:text-left pointer-events-none"
-      >
-        <motion.div 
-          variants={textVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.3 }}
-          className="max-w-4xl w-full"
-        >
-          {/* Category Label */}
-          <p className="text-white/80 font-medium tracking-[0.2em] text-xs md:text-sm uppercase mb-4 md:mb-6 shadow-black drop-shadow-sm">
-            {project.category}
-          </p>
-          
-          {/* Title */}
-          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight text-white mb-6 md:mb-8 drop-shadow-md">
-            {project.title}
-          </h3>
-          
-          {/* Short Description */}
-          <p className="text-sm md:text-lg text-stone-200 font-normal leading-relaxed max-w-xl mb-8 md:mb-10 drop-shadow-sm opacity-95">
-            {project.shortDescription}
-          </p>
-          
-          {/* Call to Action Button */}
-          <div className="pointer-events-auto inline-flex items-center gap-2 px-6 py-3 bg-gray text-stone-900 font-semibold text-xs md:text-sm tracking-wide hover:bg-white opacity-70 shadow-lg backdrop-blur-sm">
-             <span>View</span>
-             <ChevronDown size={16} />
-          </div>
-        </motion.div>
-      </motion.div>
-
-      {/* 
-        The "Pull Down" Drawer Overlay 
-      */}
-      <AnimatePresence>
-        {isActive && (
-          <motion.div
-            ref={detailsRef}
-            // Stop propagation here so clicking inside the details doesn't trigger the parent onClick (which would close it)
-            onClick={(e) => e.stopPropagation()} 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ 
-              height: 0, 
-              opacity: 0,
-              transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } 
-            }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute top-full left-0 w-full bg-[#fbfaf8] border-t border-stone-200 shadow-2xl overflow-hidden z-50 origin-top cursor-auto"
-          >
-            <div className="w-full max-w-6xl mx-auto px-6 md:px-8 py-16 md:py-24 flex flex-col md:flex-row gap-12 md:gap-24 relative z-10">
-              
-              <div className="md:w-2/3 relative">
-                <h4 className="text-2xl font-serif mb-8 text-stone-800">
-                  Project Insight
-                </h4>
-                <p className="text-stone-600 font-light leading-loose whitespace-pre-line text-lg md:text-xl">
-                  {project.fullDescription}
-                </p>
-                
-                <div className="mt-12 flex flex-wrap gap-3">
-                  {project.tags.map(tag => (
-                    <span key={tag} className="px-4 py-2 bg-stone-100 border border-stone-200 text-stone-600 text-sm tracking-wide rounded-md">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="md:w-1/3 flex flex-col gap-8 h-fit relative">
-                 <div className="p-8 bg-white border border-stone-100 rounded-xl shadow-sm">
-                    <div className="mb-6">
-                        <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest font-semibold">Role</span>
-                        <span className="text-stone-800 text-lg">Art Director, Designer</span>
-                    </div>
-                    <div className="mb-6">
-                        <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest font-semibold">Year</span>
-                        <span className="text-stone-800 text-lg">{project.year}</span>
-                    </div>
-                    <button className="flex items-center gap-2 text-stone-900 hover:text-stone-500 transition-colors group/link mt-2">
-                      <span className="text-sm font-semibold border-b border-stone-900 group-hover/link:border-stone-500 pb-0.5">View Case Study</span>
-                      <ExternalLink size={16} />
-                    </button>
-                 </div>
-              </div>
-
-              {/* Distinct Close Button in Bottom Right */}
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent bubbling
-                  onClick(); // Trigger close
-                }}
-                className="absolute bottom-8 right-8 bg-stone-900 text-white hover:bg-stone-500 opacity-50"
-              >
-                <span className="text-xs font-bold tracking-widest uppercase"></span>
-                <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-/**
  * Footer Component
+ * Reusable for both Main Page and Case Study Page
  */
 const Footer: React.FC = () => {
   return (
@@ -406,10 +134,379 @@ const Footer: React.FC = () => {
 };
 
 /**
+ * Case Study Page Component
+ * Acts as a standalone website for the specific project.
+ */
+interface CaseStudyPageProps {
+  project: Project;
+  onClose: () => void;
+}
+
+const CaseStudyPage: React.FC<CaseStudyPageProps> = ({ project, onClose }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const galleryImages = project.gallery || [project.imageUrl];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-[#f5f4f0] text-stone-900 absolute top-0 left-0 w-full z-50"
+    >
+      {/* Case Study Navbar */}
+      <nav className="fixed top-0 left-0 w-full z-[60] px-6 py-6 flex justify-between items-center bg-[#f5f4f0]/95 backdrop-blur-md border-b border-stone-200">
+        <div className="flex flex-col">
+          <span className="text-xs font-bold uppercase tracking-widest text-stone-500">Project</span>
+          <span className="font-serif font-bold text-lg text-stone-900">{project.title}</span>
+        </div>
+        <button 
+          onClick={onClose}
+          className="group flex items-center gap-2 text-stone-800 hover:text-stone-500 transition-colors uppercase text-xs font-bold tracking-widest"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          Back to Index
+        </button>
+      </nav>
+
+      {/* Case Study Content */}
+      <div className="pt-32 pb-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          
+          {/* Hero Header */}
+          <div className="mb-16 md:mb-24">
+            <h1 className="text-5xl md:text-8xl font-serif text-stone-900 mb-8 leading-tight">
+              {project.title}
+            </h1>
+            <p className="text-xl md:text-2xl font-light text-stone-600 max-w-2xl leading-relaxed">
+              {project.shortDescription}
+            </p>
+          </div>
+
+          {/* Main Hero Image */}
+          <div className="w-full h-[60vh] md:h-[80vh] mb-24 overflow-hidden rounded-sm shadow-sm">
+            <img 
+              src={project.imageUrl} 
+              alt={project.title} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Grid Layout Info & Description */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-32">
+            
+            {/* Metadata Sidebar */}
+            <div className="md:col-span-4 flex flex-col gap-10 border-t border-stone-300 pt-8">
+               <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Category</h3>
+                  <p className="text-lg text-stone-800">{project.category}</p>
+               </div>
+               <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Year</h3>
+                  <p className="text-lg text-stone-800">{project.year}</p>
+               </div>
+               <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Services</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags.map(tag => (
+                      <span key={tag} className="text-stone-600 border border-stone-200 px-3 py-1 text-sm rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+               </div>
+            </div>
+
+            {/* Main Description */}
+            <div className="md:col-span-8 border-t border-stone-300 pt-8">
+               <h3 className="text-3xl font-serif text-stone-800 mb-8">About the Project</h3>
+               <p className="text-stone-600 text-lg md:text-xl font-light leading-loose whitespace-pre-line">
+                 {project.fullDescription}
+                 <br /><br />
+                 We approached this challenge by stripping away the non-essential, focusing purely on form, material, and typography. The result is a system that speaks quietly but carries immense weight, perfectly aligning with the client's vision of understated luxury and timeless utility.
+               </p>
+            </div>
+          </div>
+
+          {/* Image Gallery */}
+          <div className="space-y-12 md:space-y-24 mb-32">
+             {galleryImages.map((img, idx) => (
+                <div key={idx} className="w-full">
+                  <img 
+                    src={img} 
+                    alt={`${project.title} gallery ${idx + 1}`} 
+                    className="w-full h-auto object-cover shadow-sm rounded-sm"
+                  />
+                  <p className="text-xs text-stone-400 mt-4 text-right tracking-widest uppercase">
+                    Figure 0{idx + 1}
+                  </p>
+                </div>
+             ))}
+          </div>
+
+        </div>
+      </div>
+
+      <Footer />
+      <BackToTop />
+    </motion.div>
+  );
+};
+
+/**
+ * Individual Project Item
+ */
+interface ProjectItemProps {
+  project: Project;
+  index: number;
+  isActive: boolean;
+  onClick: () => void;
+  onViewCaseStudy: () => void;
+  id?: string;
+}
+
+const ProjectItem: React.FC<ProjectItemProps> = ({ project, index, isActive, onClick, onViewCaseStudy, id }) => {
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  const galleryImages = project.gallery || [project.imageUrl];
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isActive && galleryImages.length > 1) {
+      interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
+      }, 3000);
+    } else {
+      if (!isActive) {
+        setCurrentImageIndex(0);
+      }
+    }
+    return () => clearInterval(interval);
+  }, [isActive, galleryImages.length, currentImageIndex]);
+
+  const textVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.8, delay: 0.2, ease: "easeOut" }
+    },
+    exit: {
+      opacity: 0,
+      transition: { duration: 0.5, ease: "easeOut" }
+    }
+  };
+
+  const slideVariants: Variants = {
+    hidden: { 
+      x: index % 2 === 0 ? -50 : 50, 
+      opacity: 0 
+    },
+    visible: { 
+      x: 0, 
+      opacity: 1,
+      transition: { duration: 1.0, ease: "easeOut" }
+    }
+  };
+
+  useEffect(() => {
+    if (isActive && detailsRef.current) {
+      const timer = setTimeout(() => {
+        if (detailsRef.current) {
+          const y = detailsRef.current.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 10); 
+      return () => clearTimeout(timer);
+    }
+  }, [isActive]);
+
+  return (
+    <motion.div 
+      id={id}
+      onClick={onClick}
+      onViewportLeave={() => {
+        if (isActive) {
+          onClick();
+        }
+      }}
+      className={`relative w-full h-screen bg-stone-900 cursor-pointer group ${isActive ? 'z-40' : 'z-0'}`}
+    >
+      <div className="absolute inset-0 overflow-hidden bg-stone-900">
+        <motion.div
+          variants={slideVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.2 }}
+          className="w-full h-full relative"
+        >
+          <AnimatePresence mode="popLayout">
+            <motion.img 
+              key={currentImageIndex}
+              src={galleryImages[currentImageIndex]} 
+              alt={project.title}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
+            />
+          </AnimatePresence>
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100" />
+      </div>
+
+      {isActive && galleryImages.length > 1 && (
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 flex gap-1 items-center">
+          {galleryImages.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentImageIndex(idx);
+              }}
+              className="p-3 group focus:outline-none"
+              aria-label={`Go to slide ${idx + 1}`}
+            >
+              <div 
+                className={`h-2.5 rounded-full transition-all duration-300 ease-out shadow-sm ${
+                  idx === currentImageIndex 
+                    ? 'w-10 bg-white opacity-100' 
+                    : 'w-2.5 bg-white/50 group-hover:bg-white/80 group-hover:w-4'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
+      <motion.div 
+        animate={{ 
+          opacity: isActive ? 0 : 1,
+          display: isActive ? "none" : "flex"
+        }}
+        transition={{ duration: 0.5 }}
+        className="absolute bottom-0 left-0 w-full p-8 md:p-16 pb-20 md:pb-24 z-20 flex-col justify-end items-center md:items-start text-center md:text-left pointer-events-none"
+      >
+        <motion.div 
+          variants={textVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.3 }}
+          className="max-w-4xl w-full"
+        >
+          <p className="text-white/80 font-medium tracking-[0.2em] text-xs md:text-sm uppercase mb-4 md:mb-6 shadow-black drop-shadow-sm">
+            {project.category}
+          </p>
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight text-white mb-6 md:mb-8 drop-shadow-md">
+            {project.title}
+          </h3>
+          <p className="text-sm md:text-lg text-stone-200 font-normal leading-relaxed max-w-xl mb-8 md:mb-10 drop-shadow-sm opacity-95">
+            {project.shortDescription}
+          </p>
+          <div className="pointer-events-auto inline-flex items-center gap-2 px-6 py-3 bg-gray text-stone-900 font-semibold text-xs md:text-sm tracking-wide hover:bg-white opacity-70 shadow-lg backdrop-blur-sm">
+             <span>View</span>
+             <ChevronDown size={16} />
+          </div>
+        </motion.div>
+      </motion.div>
+
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            key="details"
+            ref={detailsRef}
+            onClick={(e) => e.stopPropagation()} 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ 
+              height: "auto", 
+              opacity: 1,
+              transition: { 
+                height: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+                opacity: { duration: 0.4, delay: 0.1 }
+              } 
+            }}
+            exit={{ 
+              height: 0, 
+              opacity: 0,
+              transition: { 
+                height: { duration: 0.5, ease: "easeInOut" },
+                opacity: { duration: 0.3 }
+              } 
+            }}
+            className="absolute top-full left-0 w-full bg-[#fbfaf8] border-t border-stone-200 shadow-2xl overflow-hidden z-50 origin-top cursor-auto"
+          >
+            <div className="w-full max-w-6xl mx-auto px-6 md:px-8 py-16 md:py-24 flex flex-col md:flex-row gap-12 md:gap-24 relative z-10">
+              
+              <div className="md:w-2/3 relative">
+                <h4 className="text-2xl font-serif mb-8 text-stone-800">
+                  Project Insight
+                </h4>
+                <p className="text-stone-600 font-light leading-loose whitespace-pre-line text-lg md:text-xl">
+                  {project.fullDescription}
+                </p>
+                <div className="mt-12 flex flex-wrap gap-3">
+                  {project.tags.map(tag => (
+                    <span key={tag} className="px-4 py-2 bg-stone-100 border border-stone-200 text-stone-600 text-sm tracking-wide rounded-md">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="md:w-1/3 flex flex-col gap-8 h-fit relative">
+                 <div className="p-8 bg-white border border-stone-100 rounded-xl shadow-sm">
+                    <div className="mb-6">
+                        <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest font-semibold">Role</span>
+                        <span className="text-stone-800 text-lg">Art Director, Designer</span>
+                    </div>
+                    <div className="mb-6">
+                        <span className="block text-xs uppercase text-stone-400 mb-2 tracking-widest font-semibold">Year</span>
+                        <span className="text-stone-800 text-lg">{project.year}</span>
+                    </div>
+                    {/* The "View Case Study" Button - Now triggers the new page */}
+                    <button 
+                      onClick={(e) => {
+                         e.stopPropagation();
+                         onViewCaseStudy();
+                      }}
+                      className="flex items-center gap-2 text-stone-900 hover:text-stone-500 transition-colors group/link mt-2"
+                    >
+                      <span className="text-sm font-semibold border-b border-stone-900 group-hover/link:border-stone-500 pb-0.5">View Case Study</span>
+                      <ExternalLink size={16} />
+                    </button>
+                 </div>
+              </div>
+
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClick();
+                }}
+                className="absolute bottom-8 right-8 bg-stone-900 text-white hover:bg-stone-500 opacity-50"
+              >
+                <span className="text-xs font-bold tracking-widest uppercase"></span>
+                <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+/**
  * Main App Component
  */
 const App: React.FC = () => {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  // New State: View Case Study
+  const [viewingCaseStudyId, setViewingCaseStudyId] = useState<string | null>(null);
   const [isWorksMenuOpen, setIsWorksMenuOpen] = useState(false);
 
   const handleProjectClick = (id: string) => {
@@ -430,101 +527,139 @@ const App: React.FC = () => {
   };
 
   const scrollToProject = (projectId: string) => {
+    // If we are in case study mode, close it first
+    if (viewingCaseStudyId) {
+      setViewingCaseStudyId(null);
+      // Wait for exit animation to finish before scrolling (approx)
+      setTimeout(() => {
+        const element = document.getElementById(`project-${projectId}`);
+        if (element) {
+          const y = element.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 500);
+      return;
+    }
+
     const element = document.getElementById(`project-${projectId}`);
     if (element) {
-      // Offset for the fixed header
       const y = element.getBoundingClientRect().top + window.scrollY - 80;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
     setIsWorksMenuOpen(false);
   };
 
+  const currentCaseStudy = PROJECTS.find(p => p.id === viewingCaseStudyId);
+
   return (
-    <div className="min-h-screen selection:bg-stone-300 selection:text-stone-900 bg-[#f5f4f0] overflow-x-hidden">
+    <div className="min-h-screen selection:bg-stone-300 selection:text-stone-900 bg-[#f5f4f0] overflow-x-hidden relative">
       
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center bg-[#f5f4f0]/90 backdrop-blur-md border-b border-stone-200/50 transition-all duration-300">
-         <div className="cursor-pointer group" onClick={scrollToTop}>
-            <span className="font-serif font-bold text-xl tracking-tighter text-stone-800 group-hover:text-stone-500 transition-colors">SK.</span>
-         </div>
-         <div className="flex items-center gap-8 relative">
-            
-            {/* Works Dropdown Trigger */}
-            <div className="relative">
-              <button 
-                onClick={() => setIsWorksMenuOpen(!isWorksMenuOpen)} 
-                className="flex items-center gap-1 text-stone-800 text-xs font-bold uppercase tracking-widest hover:text-stone-500 transition-colors focus:outline-none"
-              >
-                Works
-                <ChevronDown size={14} className={`transform transition-transform duration-300 ${isWorksMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Works Dropdown Menu */}
-              <AnimatePresence>
-                {isWorksMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-6 w-64 bg-[#f0efe9]/80 backdrop-blur-md border border-stone-200 shadow-xl p-2 rounded-sm z-50"
-                  >
-                    <ul className="flex flex-col">
-                      {PROJECTS.map((project) => (
-                        <li key={project.id}>
-                          <button
-                            onClick={() => scrollToProject(project.id)}
-                            className="w-full text-left px-4 py-3 text-xs text-stone-600 hover:bg-stone-200/50 hover:text-stone-900 transition-colors font-medium truncate focus:outline-none flex justify-between group/item"
-                          >
-                            <span>{project.title}</span>
-                            <span className="opacity-0 group-hover/item:opacity-100 transition-opacity">→</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <button 
-              onClick={() => scrollToSection('contact')} 
-              className="text-stone-800 text-xs font-bold uppercase tracking-widest hover:text-stone-500 transition-colors focus:outline-none"
-            >
-              Contact
-            </button>
-         </div>
-      </nav>
-
-      {/* Click outside listener for menu */}
-      {isWorksMenuOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-transparent" 
-          onClick={() => setIsWorksMenuOpen(false)} 
-        />
-      )}
-
-      <main className="w-full pt-0">
-        <Hero />
+      <AnimatePresence mode="wait">
         
-        <section id="works" className="w-full border-t border-stone-300">
-           <div className="flex flex-col w-full">
-             {PROJECTS.map((project, index) => (
-               <ProjectItem 
-                 key={project.id}
-                 id={`project-${project.id}`}
-                 index={index}
-                 project={project}
-                 isActive={activeProjectId === project.id}
-                 onClick={() => handleProjectClick(project.id)}
-               />
-             ))}
-           </div>
-        </section>
-      </main>
+        {/* CASE STUDY VIEW */}
+        {viewingCaseStudyId && currentCaseStudy ? (
+          <CaseStudyPage 
+            key="case-study-page"
+            project={currentCaseStudy} 
+            onClose={() => setViewingCaseStudyId(null)} 
+          />
+        ) : (
+          
+          /* MAIN PORTFOLIO VIEW */
+          <motion.div 
+            key="main-portfolio"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Navigation (Main) */}
+            <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center bg-[#f5f4f0]/90 backdrop-blur-md border-b border-stone-200/50 transition-all duration-300">
+               <div className="cursor-pointer group" onClick={scrollToTop}>
+                  <span className="font-serif font-bold text-xl tracking-tighter text-stone-800 group-hover:text-stone-500 transition-colors">SK.</span>
+               </div>
+               <div className="flex items-center gap-8 relative">
+                  
+                  {/* Works Dropdown Trigger */}
+                  <div className="relative">
+                    <button 
+                      onClick={() => setIsWorksMenuOpen(!isWorksMenuOpen)} 
+                      className="flex items-center gap-1 text-stone-800 text-xs font-bold uppercase tracking-widest hover:text-stone-500 transition-colors focus:outline-none"
+                    >
+                      Works
+                      <ChevronDown size={14} className={`transform transition-transform duration-300 ${isWorksMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-      <Footer />
-      <BackToTop />
+                    {/* Works Dropdown Menu */}
+                    <AnimatePresence>
+                      {isWorksMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-full right-0 mt-6 w-64 bg-[#f0efe9]/80 backdrop-blur-md border border-stone-200 shadow-xl p-2 rounded-sm z-50"
+                        >
+                          <ul className="flex flex-col">
+                            {PROJECTS.map((project) => (
+                              <li key={project.id}>
+                                <button
+                                  onClick={() => scrollToProject(project.id)}
+                                  className="w-full text-left px-4 py-3 text-xs text-stone-600 hover:bg-stone-200/50 hover:text-stone-900 transition-colors font-medium truncate focus:outline-none flex justify-between group/item"
+                                >
+                                  <span>{project.title}</span>
+                                  <span className="opacity-0 group-hover/item:opacity-100 transition-opacity">→</span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <button 
+                    onClick={() => scrollToSection('contact')} 
+                    className="text-stone-800 text-xs font-bold uppercase tracking-widest hover:text-stone-500 transition-colors focus:outline-none"
+                  >
+                    Contact
+                  </button>
+               </div>
+            </nav>
+
+            {/* Click outside listener for menu */}
+            {isWorksMenuOpen && (
+              <div 
+                className="fixed inset-0 z-40 bg-transparent" 
+                onClick={() => setIsWorksMenuOpen(false)} 
+              />
+            )}
+
+            <main className="w-full pt-0">
+              <Hero />
+              
+              <section id="works" className="w-full border-t border-stone-300">
+                 <div className="flex flex-col w-full">
+                   {PROJECTS.map((project, index) => (
+                     <ProjectItem 
+                       key={project.id}
+                       id={`project-${project.id}`}
+                       index={index}
+                       project={project}
+                       isActive={activeProjectId === project.id}
+                       onClick={() => handleProjectClick(project.id)}
+                       onViewCaseStudy={() => setViewingCaseStudyId(project.id)}
+                     />
+                   ))}
+                 </div>
+              </section>
+            </main>
+
+            <Footer />
+            <BackToTop />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
